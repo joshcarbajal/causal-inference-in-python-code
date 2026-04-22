@@ -1,109 +1,75 @@
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": 8,
-   "id": "f7f66ba8-c3d9-4ffb-a8b0-2125be25c69a",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "import pandas as pd\n",
-    "import numpy as np\n",
-    "from lightgbm import LGBMRegressor\n",
-    "from sklearn.linear_model import LogisticRegression\n",
-    "\n",
-    "def s_learner_discrete(train, test, X, T, y):\n",
-    "    m\n",
-    "    odel = LGBMRegressor(random_state=42)\n",
-    "    features = X + [T]\n",
-    "    model.fit(train[features], train[y])\n",
-    "    \n",
-    "    test_t1 = test.copy()\n",
-    "    test_t1[T] = 1\n",
-    "    test_t0 = test.copy()\n",
-    "    test_t0[T] = 0\n",
-    "    \n",
-    "    cate = model.predict(test_t1[features]) - model.predict(test_t0[features])\n",
-    "    \n",
-    "    res = test.copy()\n",
-    "    res['cate'] = cate\n",
-    "    return res\n",
-    "\n",
-    "def t_learner_discrete(train, test, X, T, y):\n",
-    "    \n",
-    "    train_0 = train[train[T] == 0]\n",
-    "    train_1 = train[train[T] == 1]\n",
-    "    \n",
-    "    mu_0 = LGBMRegressor(random_state=42).fit(train_0[X], train_0[y])\n",
-    "    mu_1 = LGBMRegressor(random_state=42).fit(train_1[X], train_1[y])\n",
-    "    \n",
-    "    cate = mu_1.predict(test[X]) - mu_0.predict(test[X])\n",
-    "    \n",
-    "    res = test.copy()\n",
-    "    res['cate'] = cate\n",
-    "    return res\n",
-    "\n",
-    "def x_learner_discrete(train, test, X, T, y):\n",
-    "\n",
-    "    train_0 = train[train[T] == 0]\n",
-    "    train_1 = train[train[T] == 1]\n",
-    "    mu0 = LGBMRegressor(random_state=42).fit(train_0[X], train_0[y])\n",
-    "    mu1 = LGBMRegressor(random_state=42).fit(train_1[X], train_1[y])\n",
-    "    \n",
-    "    d1 = train_1[y] - mu0.predict(train_1[X])\n",
-    "    d0 = mu1.predict(train_0[X]) - train_0[y]\n",
-    "    \n",
-    "    tau1 = LGBMRegressor(random_state=42).fit(train_1[X], d1)\n",
-    "    tau0 = LGBMRegressor(random_state=42).fit(train_0[X], d0)\n",
-    "    \n",
-    "    e_model = LogisticRegression(penalty=None, random_state=42).fit(train[X], train[T])\n",
-    "    e_x = e_model.predict_proba(test[X])[:, 1]\n",
-    "    \n",
-    "    cate = e_x * tau0.predict(test[X]) + (1 - e_x) * tau1.predict(test[X])\n",
-    "    \n",
-    "    res = test.copy()\n",
-    "    res['cate'] = cate\n",
-    "    return res\n",
-    "\n",
-    "def double_ml_cate(train, test, X, T, y):\n",
-    "\n",
-    "    model_y = LGBMRegressor(random_state=42).fit(train[X], train[y])\n",
-    "    y_res = train[y] - model_y.predict(train[X])\n",
-    "    \n",
-    "    model_t = LGBMRegressor(random_state=42).fit(train[X], train[T])\n",
-    "    t_res = train[T] - model_t.predict(train[X])\n",
-    "\n",
-    "    y_star = y_res / t_res\n",
-    "    weights = t_res ** 2\n",
-    "    \n",
-    "    cate_model = LGBMRegressor(random_state=42)\n",
-    "    cate_model.fit(train[X], y_star, sample_weight=weights)\n",
-    "    \n",
-    "    res = test.copy()\n",
-    "    res['cate'] = cate_model.predict(test[X])\n",
-    "    return res"
-   ]
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3 (ipykernel)",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.12.7"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+import pandas as pd
+import numpy as np
+from lightgbm import LGBMRegressor
+from sklearn.linear_model import LogisticRegression
+
+def s_learner_discrete(train, test, X, T, y):
+
+    model = LGBMRegressor(random_state=42)
+    features = X + [T]
+    model.fit(train[features], train[y])
+    
+    test_t1 = test.copy()
+    test_t1[T] = 1
+    test_t0 = test.copy()
+    test_t0[T] = 0
+    
+    cate = model.predict(test_t1[features]) - model.predict(test_t0[features])
+    
+    res = test.copy()
+    res['cate'] = cate
+    return res
+
+def t_learner_discrete(train, test, X, T, y):
+
+    train_0 = train[train[T] == 0]
+    train_1 = train[train[T] == 1]
+    
+    mu_0 = LGBMRegressor(random_state=42).fit(train_0[X], train_0[y])
+    mu_1 = LGBMRegressor(random_state=42).fit(train_1[X], train_1[y])
+    
+    cate = mu_1.predict(test[X]) - mu_0.predict(test[X])
+    
+    res = test.copy()
+    res['cate'] = cate
+    return res
+
+def x_learner_discrete(train, test, X, T, y):
+
+    train_0 = train[train[T] == 0]
+    train_1 = train[train[T] == 1]
+    mu0 = LGBMRegressor(random_state=42).fit(train_0[X], train_0[y])
+    mu1 = LGBMRegressor(random_state=42).fit(train_1[X], train_1[y])
+    
+    d1 = train_1[y] - mu0.predict(train_1[X])
+    d0 = mu1.predict(train_0[X]) - train_0[y]
+    
+    tau1 = LGBMRegressor(random_state=42).fit(train_1[X], d1)
+    tau0 = LGBMRegressor(random_state=42).fit(train_0[X], d0)
+    
+    e_model = LogisticRegression(penalty=None, random_state=42).fit(train[X], train[T])
+    e_x = e_model.predict_proba(test[X])[:, 1]
+    
+    cate = e_x * tau0.predict(test[X]) + (1 - e_x) * tau1.predict(test[X])
+    
+    res = test.copy()
+    res['cate'] = cate
+    return res
+
+def double_ml_cate(train, test, X, T, y):
+
+    model_y = LGBMRegressor(random_state=42).fit(train[X], train[y])
+    y_res = train[y] - model_y.predict(train[X])
+    
+    model_t = LGBMRegressor(random_state=42).fit(train[X], train[T])
+    t_res = train[T] - model_t.predict(train[X])
+
+    y_star = y_res / t_res
+    weights = t_res ** 2
+    
+    cate_model = LGBMRegressor(random_state=42)
+    cate_model.fit(train[X], y_star, sample_weight=weights)
+    
+    res = test.copy()
+    res['cate'] = cate_model.predict(test[X])
+    return res
